@@ -1,0 +1,35 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/ https://raw.githubusercontent.com/Gethe/wow-ui-source/live/Interface/AddOns/Blizzard_SharedXML/UI.xsd">
+	<!-- @snippet animation-flipbook -->
+	<Frame name="UIGalleryFlipbookTemplate" virtual="true">
+		<Size x="96" y="96"/>
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture parentKey="Icon" file="Interface\Icons\Spell_Holy_SurgeOfLight">
+					<Size x="56" y="56"/>
+					<Anchors>
+						<Anchor point="CENTER"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+			<Layer level="OVERLAY">
+				<Texture parentKey="Flipbook" atlas="UI-HUD-ActionBar-Proc-Loop-Flipbook" alphaMode="ADD" setAllPoints="true">
+					<Animations>
+						<AnimationGroup parentKey="Anim" looping="REPEAT">
+							<FlipBook parentKey="Flip" duration="1" flipBookRows="6" flipBookColumns="5" flipBookFrames="30" flipBookFrameWidth="0" flipBookFrameHeight="0"/>
+						</AnimationGroup>
+					</Animations>
+				</Texture>
+			</Layer>
+		</Layers>
+		<Scripts>
+			<!-- No XML attribute starts an animation: play it when the frame shows. -->
+			<OnShow>
+				self.Flipbook.Anim:Play();
+			</OnShow>
+			<OnHide>
+				self.Flipbook.Anim:Stop();
+			</OnHide>
+		</Scripts>
+	</Frame>
+	<!-- @end -->
+</Ui>

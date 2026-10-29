@@ -1,0 +1,7 @@
+.build/
+UIGallery/
+.vscode/
+*.log
+*.tmp
+.DS_Store
+Thumbs.db

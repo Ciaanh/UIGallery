@@ -1,0 +1,59 @@
+## Interface: 120105, 16001
+## Title: UI Gallery
+## Notes: Browsable catalogue of Blizzard UI components: live examples, XML and Lua code, options
+## Author: Ciaanh
+## Version: 0.1.0
+## SavedVariables: UIGalleryDB
+## IconTexture: Interface\Icons\INV_Misc_Book_09
+## Category: Development Tools
+## X-Website: https://github.com/Ciaanh/UIGallery
+## X-License: MIT
+## AddonCompartmentFunc: UIGallery_OnAddonCompartmentClick
+
+core\Util.lua
+core\Capabilities.lua
+core\Registry.lua
+generated\Snippets.lua
+core\UI\CodeView.lua
+core\UI\Controls.lua
+core\UI\Card.lua
+core\UI\Page.lua
+core\UI\Window.lua
+
+examples\progress\StatusBar.lua
+examples\progress\StatusBar.xml
+examples\progress\RadialProgress.lua
+examples\progress\RadialProgress.xml
+examples\progress\Cooldown.lua
+examples\progress\Cooldown.xml
+examples\progress\LoadingSpinner.lua
+
+examples\controls\Button.lua
+examples\controls\Button.xml
+examples\controls\Checkbox.lua
+examples\controls\Radio.lua
+examples\controls\Slider.lua
+examples\controls\NumberInput.lua
+examples\controls\EditBox.lua
+examples\controls\Dropdown.lua
+examples\controls\ColorPicker.lua
+examples\controls\ItemButton.lua
+
+examples\layout\Window.lua
+examples\layout\Window.xml
+examples\layout\Panels.lua
+examples\layout\Dialogs.lua
+examples\layout\Tabs.lua
+examples\layout\ScrollList.lua
+examples\layout\ScrollList.xml
+examples\layout\Tooltip.lua
+
+examples\visuals\Texture.lua
+examples\visuals\Mask.lua
+examples\visuals\Animation.lua
+examples\visuals\Animation.xml
+examples\visuals\FontString.lua
+examples\visuals\Line.lua
+examples\visuals\Money.lua
+
+UIGallery.lua

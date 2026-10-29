@@ -1,0 +1,21 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/ https://raw.githubusercontent.com/Gethe/wow-ui-source/live/Interface/AddOns/Blizzard_SharedXML/UI.xsd">
+	<!-- @snippet radial-arc -->
+	<Frame name="UIGalleryRadialArcTemplate" virtual="true">
+		<Size x="140" y="140"/>
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture parentKey="Track" file="Interface\AddOns\UIGallery\media\ring" setAllPoints="true">
+					<Color r="0.2" g="0.2" b="0.25"/>
+					<RadialProgressBar barFillPercent="1" startOffset="0.125" endOffset="0.875"/>
+				</Texture>
+			</Layer>
+			<Layer level="ARTWORK">
+				<Texture parentKey="Fill" file="Interface\AddOns\UIGallery\media\ring" setAllPoints="true">
+					<Color r="0.3" g="1" b="0.5"/>
+					<RadialProgressBar barFillPercent="0" startOffset="0.125" endOffset="0.875" feather="0.02"/>
+				</Texture>
+			</Layer>
+		</Layers>
+	</Frame>
+	<!-- @end -->
+</Ui>
