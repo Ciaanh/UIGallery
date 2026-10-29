@@ -95,8 +95,8 @@ ns.AddExample("window", {
         return holder
     end,
     controls = {
-        { type = "choice", key = "template", label = "Template", choices = TEMPLATES, default = "PortraitFrameTemplate" },
-        { type = "check", key = "portrait", label = "Portrait", default = true },
+        { type = "choice", key = "template", label = "Template", choices = TEMPLATES, default = "PortraitFrameTemplate", code = function(value) if value == "Dialog" then return 'CreateDialog(parent, "Dialog")' end return ('CreateWindow(parent, "%s", "%s")'):format(value, value) end },
+        { type = "check", key = "portrait", label = "Portrait", default = true, code = "window:SetPortraitShown(%s)" },
     },
     apply = function(holder, _, _, values)
         ShowTemplate(holder, values.template, values)

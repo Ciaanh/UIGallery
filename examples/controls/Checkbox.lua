@@ -54,7 +54,7 @@ ns.AddExample("checkbox", {
         return check
     end,
     controls = {
-        { type = "check", key = "enabled", label = "Enabled", default = true },
+        { type = "check", key = "enabled", label = "Enabled", default = true, code = function(value) return ('check:SetEnabled(%s)\ncheck.Text:SetFontObject("%s")'):format(tostring(value), value and "GameFontNormalSmall" or "GameFontDisableSmall") end },
     },
     apply = function(check, key, value)
         if key == "enabled" then

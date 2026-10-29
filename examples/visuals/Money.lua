@@ -64,7 +64,7 @@ ns.AddExample("money", {
         return holder
     end,
     controls = {
-        { type = "choice", key = "amount", label = "Amount", choices = AMOUNTS, default = 57 },
+        { type = "choice", key = "amount", label = "Amount", choices = AMOUNTS, default = 57, code = function(value) return ("MoneyFrame_Update(price, %d)\ntext:SetText(GetMoneyString(%d, true))"):format(value, value) end },
     },
     apply = function(holder, key, value)
         if key == "amount" then

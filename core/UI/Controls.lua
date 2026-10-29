@@ -8,6 +8,7 @@ local _, ns = ...
 --   { type = "check",  key, label, default }
 --   { type = "choice", key, label, choices = { { value, text }, ... }, default }
 --   { type = "button", key, label }            onChange(key, true) on click
+-- Every slider, check and choice also has `code`: see Controls.CodeFor.
 local Controls = {}
 ns.Controls = Controls
 
@@ -84,6 +85,38 @@ function builders.button(cell, spec, onChange)
     button:SetText(spec.label)
     button:SetSize(math.max(100, button:GetFontString():GetStringWidth() + 30), 24)
     button:SetScript("OnClick", function() onChange(spec.key, true) end)
+end
+
+-- A control value as Lua source: strings quoted, numbers trimmed to the step's precision.
+function Controls.FormatValue(spec, value)
+    if type(value) == "string" then
+        return ("%q"):format(value)
+    elseif type(value) == "number" then
+        if spec.step and spec.step < 1 then
+            return (("%.3f"):format(value):gsub("0+$", ""):gsub("%.$", ""))
+        end
+        return tostring(math.floor(value + 0.5))
+    end
+    return tostring(value)
+end
+
+-- The calls matching the current values, one line per control with `code`, in control order;
+-- nil when no control has any. `code` is a format string with one %s (the formatted value), or
+-- function(value, values) -> string or nil, or false for a control that maps to no call.
+function Controls.CodeFor(specs, values)
+    local lines = {}
+    for _, spec in ipairs(specs) do
+        local code = spec.code
+        if type(code) == "function" then
+            code = code(values[spec.key], values)
+        elseif type(code) == "string" then
+            code = code:format(Controls.FormatValue(spec, values[spec.key]))
+        end
+        if type(code) == "string" and code ~= "" then
+            table.insert(lines, code)
+        end
+    end
+    return #lines > 0 and table.concat(lines, "\n") or nil
 end
 
 -- Returns the container (its height set) and the values table.

@@ -57,8 +57,8 @@ ns.AddExample("numberinput", {
         return spinner
     end,
     controls = {
-        { type = "slider", key = "max", label = "Maximum", min = 5, max = 999, step = 1, default = 20 },
-        { type = "check", key = "enabled", label = "Enabled", default = true },
+        { type = "slider", key = "max", label = "Maximum", min = 5, max = 999, step = 1, default = 20, code = "spinner:SetMinMaxValues(1, %s)" },
+        { type = "check", key = "enabled", label = "Enabled", default = true, code = "spinner:SetEnabled(%s)" },
         { type = "button", key = "increment", label = "Increment(5)" },
     },
     apply = function(spinner, key, value)

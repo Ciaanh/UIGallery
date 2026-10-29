@@ -77,10 +77,10 @@ ns.AddExample("statusbar", {
         return bar
     end,
     controls = {
-        { type = "slider", key = "value", label = "Value", min = 0, max = 100, step = 1, default = 65 },
-        { type = "check", key = "smooth", label = "Smooth (interpolation)", default = true },
-        { type = "choice", key = "fillStyle", label = "Fill style", choices = FILL_STYLES, default = "Standard" },
-        { type = "check", key = "reverse", label = "Reverse fill", default = false },
+        { type = "slider", key = "value", label = "Value", min = 0, max = 100, step = 1, default = 65, code = function(value, values) return ("bar:SetValue(%d, Enum.StatusBarInterpolation.%s)"):format(value, values.smooth and "ExponentialEaseOut" or "Immediate") end },
+        { type = "check", key = "smooth", label = "Smooth (interpolation)", default = true, code = false },
+        { type = "choice", key = "fillStyle", label = "Fill style", choices = FILL_STYLES, default = "Standard", code = function(value) return "bar:SetFillStyle(Enum.StatusBarFillStyle." .. value .. ")" end },
+        { type = "check", key = "reverse", label = "Reverse fill", default = false, code = "bar:SetReverseFill(%s)" },
     },
     apply = function(bar, key, value, values)
         if key == "value" or key == "smooth" then
@@ -115,8 +115,8 @@ ns.AddExample("statusbar", {
         return bar
     end,
     controls = {
-        { type = "slider", key = "value", label = "Value", min = 0, max = 1, step = 0.01, default = 0.4 },
-        { type = "check", key = "rotates", label = "Rotate texture", default = true },
+        { type = "slider", key = "value", label = "Value", min = 0, max = 1, step = 0.01, default = 0.4, code = "bar:SetValue(%s)" },
+        { type = "check", key = "rotates", label = "Rotate texture", default = true, code = "bar:SetRotatesTexture(%s)" },
     },
     apply = function(bar, key, value)
         if key == "value" then
@@ -166,8 +166,8 @@ ns.AddExample("statusbar", {
         return bar
     end,
     controls = {
-        { type = "slider", key = "seconds", label = "Duration (s)", min = 2, max = 30, step = 1, default = 8 },
-        { type = "check", key = "countDown", label = "Count down (RemainingTime)", default = true },
+        { type = "slider", key = "seconds", label = "Duration (s)", min = 2, max = 30, step = 1, default = 8, code = function(value, values) return ("StartTimer(bar, %d, %s) -- on Start"):format(value, tostring(values.countDown)) end },
+        { type = "check", key = "countDown", label = "Count down (RemainingTime)", default = true, code = false },
         { type = "button", key = "start", label = "Start" },
     },
     apply = function(bar, key, _, values)

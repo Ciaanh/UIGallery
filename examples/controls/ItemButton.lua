@@ -68,9 +68,9 @@ ns.AddExample("itembutton", {
         return button
     end,
     controls = {
-        { type = "choice", key = "item", label = "Item", choices = ITEMS, default = 6948 },
-        { type = "slider", key = "count", label = "Count", min = 0, max = 200, step = 1, default = 1 },
-        { type = "check", key = "desaturated", label = "Desaturated", default = false },
+        { type = "choice", key = "item", label = "Item", choices = ITEMS, default = 6948, code = "button:SetItem(%s)" },
+        { type = "slider", key = "count", label = "Count", min = 0, max = 200, step = 1, default = 1, code = "button:SetItemButtonCount(%s)" },
+        { type = "check", key = "desaturated", label = "Desaturated", default = false, code = "SetItemButtonDesaturated(button, %s)" },
     },
     apply = function(button, key, value, values)
         if key == "desaturated" then

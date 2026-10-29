@@ -25,7 +25,40 @@ local function AddText(page, fontObject, text, gap, indent)
     return AddBlock(page, fs, gap)
 end
 
-local function AddApiRow(page, entry)
+local CLIENTS = { { "retail", "Retail" }, { "forever", "Forever" }, { "classic", "Classic" } }
+
+-- "Retail Forever Classic", green where the row's symbols are in that client's UI source.
+local function AvailabilityText(info)
+    local parts = {}
+    for _, client in ipairs(CLIENTS) do
+        local color = info[client[1]] and "ff40c040" or "ffd04040"
+        table.insert(parts, ("|c%s%s|r"):format(color, client[2]))
+    end
+    return table.concat(parts, "  ")
+end
+
+local function ShowMissing(row)
+    GameTooltip:SetOwner(row, "ANCHOR_RIGHT")
+    GameTooltip_SetTitle(GameTooltip, "Not in this client's UI source")
+    for _, client in ipairs(CLIENTS) do
+        local missing = row.availability.missing[client[1]]
+        if missing then
+            GameTooltip_AddNormalLine(GameTooltip, client[2] .. ": " .. missing)
+        end
+    end
+    GameTooltip:Show()
+end
+
+-- The generated entry for a row, unless the row changed since tools/gen-availability.py ran.
+local function GetAvailability(componentId, index, name)
+    local rows = ns.Availability and ns.Availability[componentId]
+    local info = rows and rows[index]
+    if info and info.name == name and info.retail ~= nil then
+        return info
+    end
+end
+
+local function AddApiRow(page, entry, availability)
     local row = CreateFrame("Frame", nil, page)
     row:SetWidth(page:GetWidth())
 
@@ -53,7 +86,21 @@ local function AddApiRow(page, entry)
     end
     description:SetText(text)
 
-    row:SetHeight(math.max(name:GetStringHeight(), description:GetStringHeight()) + 12)
+    local nameHeight = name:GetStringHeight()
+    if availability then
+        local badges = row:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
+        badges:SetPoint("TOPLEFT", name, "BOTTOMLEFT", 0, -3)
+        badges:SetText(AvailabilityText(availability))
+        nameHeight = nameHeight + 3 + badges:GetStringHeight()
+        if availability.missing then
+            row.availability = availability
+            row:EnableMouse(true)
+            row:SetScript("OnEnter", ShowMissing)
+            row:SetScript("OnLeave", GameTooltip_Hide)
+        end
+    end
+
+    row:SetHeight(math.max(nameHeight, description:GetStringHeight()) + 12)
     return AddBlock(page, row, 0)
 end
 
@@ -65,7 +112,24 @@ function Page:Create(parent, width, component)
     page.component = component
 
     AddText(page, "GameFontDisableSmall", component.familyTitle, 0)
-    AddText(page, "GameFontNormalHuge", component.title, 4)
+    local title = AddText(page, "GameFontNormalHuge", component.title, 4)
+
+    local codeEntries = {}
+    for _, example in ipairs(component.examples) do
+        for _, entry in ipairs(example.code) do
+            table.insert(codeEntries, { id = type(entry) == "table" and entry[1] or entry, title = example.title })
+        end
+    end
+    if #codeEntries > 0 then
+        local allCode = CreateFrame("Button", nil, page, "UIPanelButtonTemplate")
+        allCode:SetText("All code")
+        allCode:SetSize(100, 22)
+        allCode:SetPoint("TOPRIGHT", page, "TOPRIGHT", 0, 0)
+        allCode:SetScript("OnClick", function()
+            ns.CodeView:ShowAll(component.title, codeEntries)
+        end)
+        title:SetWidth(page:GetWidth() - 110)
+    end
     AddText(page, "GameFontHighlight", component.summary, 8)
     if component.clients then
         AddText(page, "GameFontDisableSmall", "Clients: " .. component.clients, 8)
@@ -93,8 +157,10 @@ function Page:Create(parent, width, component)
 
     if component.api and #component.api > 0 then
         AddText(page, "GameFontNormalLarge", "API", SECTION_GAP)
-        for _, entry in ipairs(component.api) do
-            AddApiRow(page, entry)
+        AddText(page, "GameFontDisableSmall", "Under each name: the clients whose UI source has it, "
+            .. "checked by tools/gen-availability.py. Hover a row with a red client for what is missing.", 4)
+        for i, entry in ipairs(component.api) do
+            AddApiRow(page, entry, GetAvailability(component.id, i, entry[1]))
         end
     end
 

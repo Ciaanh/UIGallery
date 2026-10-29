@@ -99,9 +99,21 @@ local function CheckControls(where, example)
         elseif spec.type == "check" then
             check(type(spec.default) == "boolean", at .. ": check default must be a boolean")
         end
+        if spec.type ~= "button" then
+            local code = spec.code
+            check(code == false or type(code) == "function" or (type(code) == "string" and select(2, code:gsub("%%s", "")) == 1),
+                at .. ": code must be false, a function or a string with one %s")
+        end
     end
     if #example.controls > 0 then
         check(type(example.apply) == "function", where .. ": controls without apply")
+        local values = {}
+        for _, spec in ipairs(example.controls) do
+            values[spec.key] = spec.default
+        end
+        local ok, code = pcall(ns.Controls.CodeFor, example.controls, values)
+        check(ok, where .. ": code for the defaults fails: " .. tostring(code))
+        check(not (ok and code and code:find("|", 1, true)), where .. ": code contains |")
     end
 end
 
@@ -113,9 +125,14 @@ for _, family in ipairs(Registry.FAMILIES) do
         check(#component.summary > 20, where .. ": summary too short")
         check(#component.examples > 0, where .. ": no example")
         CheckRequires(where, component.requires)
+        local availability = (ns.Availability or {})[component.id] or {}
         for i, row in ipairs(component.api or {}) do
             check(type(row[1]) == "string" and type(row[2]) == "string", ("%s: api row %d malformed"):format(where, i))
+            check(availability[i] and availability[i].name == row[1],
+                ("%s: api row %d has no availability entry: run python tools/gen-availability.py"):format(where, i))
         end
+        check(#availability == #(component.api or {}),
+            where .. ": availability has extra rows: run python tools/gen-availability.py")
         for _, example in ipairs(component.examples) do
             exampleCount = exampleCount + 1
             local at = "example " .. example.id

@@ -25,6 +25,11 @@ ns.AddComponent({
         { "CreateDataProvider(table) / provider:Insert(data) / Remove / Flush / SetSortComparator", "The rows' data; the list follows its changes." },
         { "scrollBox:SetDataProvider(provider [, ScrollBoxConstants.RetainScrollPosition])", "Show a provider." },
         { "scrollBox:ScrollToElementData(data) / ForEachFrame(fn(frame, data))", "Navigation and updates of the visible rows." },
+        { "CreateScrollBoxListTreeListView(indent) + CreateTreeDataProvider()", "A tree: rows indented by depth, the initializer receives the node (node:GetData() for your table)." },
+        { "provider:Insert(data) -> node / node:Insert(data)", "Top-level and child nodes." },
+        { "node:ToggleCollapsed() / SetCollapsed(collapsed) / IsCollapsed() / GetDepth()", "Collapsing hides the children; the list updates by itself." },
+        { "provider:CollapseAll() / UncollapseAll()", "Every node at once." },
+        { "CreateScrollBoxListGridView(stride, ...) + view:SetElementSize(w, h)", "A grid: see the asset browsers (Assets family)." },
     },
     refs = {
         "Blizzard_SharedXML/Shared/Scroll/ScrollTemplates.xml",
@@ -132,6 +137,87 @@ ns.AddExample("scrolllist", {
         local list = CreateItemList(stage, items)
         list:SetPoint("CENTER", -8, 0)
         return list
+    end,
+})
+
+local CONTINENTS = {
+    { name = "Eastern Kingdoms", zones = { "Elwynn Forest", "Westfall", "Duskwood", "Stranglethorn Vale" } },
+    { name = "Kalimdor", zones = { "Durotar", "The Barrens", "Ashenvale", "Tanaris" } },
+    { name = "Northrend", zones = { "Borean Tundra", "Howling Fjord", "Icecrown" } },
+    { name = "Khaz Algar", zones = { "Isle of Dorn", "The Ringing Deeps", "Hallowfall", "Azj-Kahet" } },
+}
+
+-- @snippet scrolllist-tree
+local function CreateZoneTree(parent, continents)
+    local list = CreateFrame("Frame", nil, parent, "WowScrollBoxList")
+    list:SetSize(260, 150)
+    local scrollBar = CreateFrame("EventFrame", nil, parent, "MinimalScrollBar")
+    scrollBar:SetPoint("TOPLEFT", list, "TOPRIGHT", 6, 0)
+    scrollBar:SetPoint("BOTTOMLEFT", list, "BOTTOMRIGHT", 6, 0)
+
+    -- Rows are indented by 16 per depth level; the initializer receives the node.
+    local view = CreateScrollBoxListTreeListView(16)
+    view:SetElementExtent(20)
+    view:SetElementInitializer("Button", function(row, node)
+        if not row.Label then
+            row.Label = row:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
+            row.Label:SetPoint("LEFT", 6, 0)
+            local highlight = row:CreateTexture(nil, "HIGHLIGHT")
+            highlight:SetAllPoints()
+            highlight:SetColorTexture(1, 1, 1, 0.1)
+            row:SetScript("OnClick", function(self)
+                if self.node:GetData().isHeader then
+                    self.node:ToggleCollapsed()
+                end
+            end)
+        end
+        row.node = node
+        local data = node:GetData()
+        if data.isHeader then
+            row.Label:SetFontObject("GameFontNormal")
+            row.Label:SetText((node:IsCollapsed() and "+ " or "- ") .. data.name)
+        else
+            row.Label:SetFontObject("GameFontHighlightSmall")
+            row.Label:SetText(data.name)
+        end
+    end)
+    ScrollUtil.InitScrollBoxListWithScrollBar(list, scrollBar, view)
+
+    local provider = CreateTreeDataProvider()
+    for _, continent in ipairs(continents) do
+        local node = provider:Insert({ name = continent.name, isHeader = true })
+        for _, zone in ipairs(continent.zones) do
+            node:Insert({ name = zone })
+        end
+    end
+    list:SetDataProvider(provider)
+    list.provider = provider
+    return list
+end
+-- @end
+
+ns.AddExample("scrolllist", {
+    id = "scrolllist-tree",
+    title = "Tree list (collapsible)",
+    description = "Continents are nodes, zones their children. Click a continent to fold it: the node "
+        .. "changes, the list follows.",
+    height = 180,
+    code = { "scrolllist-tree" },
+    create = function(stage)
+        local list = CreateZoneTree(stage, CONTINENTS)
+        list:SetPoint("CENTER", -8, 0)
+        return list
+    end,
+    controls = {
+        { type = "button", key = "collapse", label = "Collapse all" },
+        { type = "button", key = "expand", label = "Expand all" },
+    },
+    apply = function(list, key)
+        if key == "collapse" then
+            list.provider:CollapseAll()
+        elseif key == "expand" then
+            list.provider:UncollapseAll()
+        end
     end,
 })
 

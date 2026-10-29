@@ -74,7 +74,7 @@ ns.AddExample("mask", {
         return icon
     end,
     controls = {
-        { type = "choice", key = "shape", label = "Mask", choices = MASKS, default = "circle" },
+        { type = "choice", key = "shape", label = "Mask", choices = MASKS, default = "circle", code = "SetMaskShape(icon, %s)" },
     },
     apply = function(icon, key, value)
         if key == "shape" then

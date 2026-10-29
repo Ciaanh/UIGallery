@@ -72,7 +72,7 @@ ns.AddExample("radio", {
         return group
     end,
     controls = {
-        { type = "check", key = "enabled", label = "Enabled", default = true },
+        { type = "check", key = "enabled", label = "Enabled", default = true, code = "radio:SetEnabled(%s) -- each radio" },
     },
     apply = function(group, key, value)
         if key == "enabled" then

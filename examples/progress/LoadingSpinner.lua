@@ -57,10 +57,10 @@ ns.AddExample("loadingspinner", {
         return holder
     end,
     controls = {
-        { type = "check", key = "shown", label = "Shown", default = true },
-        { type = "slider", key = "size", label = "SpinnerTemplate size", min = 24, max = 100, step = 2, default = 80 },
-        { type = "check", key = "desaturated", label = "Desaturated", default = false },
-        { type = "check", key = "shadow", label = "Shadow", default = false },
+        { type = "check", key = "shown", label = "Shown", default = true, code = function(value) return ("holder.Loading:SetShown(%s)\nholder.Spinner:SetShown(%s)"):format(tostring(value), tostring(value)) end },
+        { type = "slider", key = "size", label = "SpinnerTemplate size", min = 24, max = 100, step = 2, default = 80, code = function(value) return ("holder.Spinner:SetSize(%d, %d)"):format(value, value) end },
+        { type = "check", key = "desaturated", label = "Desaturated", default = false, code = "holder.Spinner:SetDesaturated(%s)" },
+        { type = "check", key = "shadow", label = "Shadow", default = false, code = "holder.Spinner:SetShadowEnabled(%s)" },
     },
     apply = function(holder, key, value)
         if key == "shown" then

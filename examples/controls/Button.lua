@@ -76,8 +76,8 @@ ns.AddExample("button", {
         return holder
     end,
     controls = {
-        { type = "check", key = "enabled", label = "Enabled", default = true },
-        { type = "slider", key = "width", label = "Width", min = 60, max = 200, step = 5, default = 120 },
+        { type = "check", key = "enabled", label = "Enabled", default = true, code = "holder.Accept:SetEnabled(%s)" },
+        { type = "slider", key = "width", label = "Width", min = 60, max = 200, step = 5, default = 120, code = "holder.Accept:SetWidth(%s)" },
     },
     apply = function(holder, key, value)
         if key == "enabled" then
@@ -122,7 +122,7 @@ ns.AddExample("button", {
         return row
     end,
     controls = {
-        { type = "check", key = "desaturate", label = "Desaturate icons", default = false },
+        { type = "check", key = "desaturate", label = "Desaturate icons", default = false, code = "button.Icon:SetDesaturated(%s) -- each button" },
     },
     apply = function(row, key, value)
         if key == "desaturate" then
@@ -216,7 +216,7 @@ ns.AddExample("button", {
         return row
     end,
     controls = {
-        { type = "check", key = "enabled", label = "Enabled", default = true },
+        { type = "check", key = "enabled", label = "Enabled", default = true, code = "button:SetEnabled(%s) -- each button" },
     },
     apply = function(row, key, value)
         if key == "enabled" then

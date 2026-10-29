@@ -69,7 +69,7 @@ ns.AddExample("editbox", {
         return input
     end,
     controls = {
-        { type = "check", key = "numeric", label = "Numeric only", default = false },
+        { type = "check", key = "numeric", label = "Numeric only", default = false, code = "input:SetNumeric(%s)" },
     },
     apply = function(input, key, value)
         if key == "numeric" then

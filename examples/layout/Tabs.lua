@@ -70,7 +70,7 @@ ns.AddExample("tabs", {
         return panel
     end,
     controls = {
-        { type = "check", key = "profiles", label = "Profiles tab enabled", default = true },
+        { type = "check", key = "profiles", label = "Profiles tab enabled", default = true, code = "panel.Tabs:SetTabEnabled(3, %s, \"Profiles are not available yet.\")" },
     },
     apply = function(panel, key, value)
         if key == "profiles" then

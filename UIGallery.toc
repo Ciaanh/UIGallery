@@ -14,11 +14,17 @@ core\Util.lua
 core\Capabilities.lua
 core\Registry.lua
 generated\Snippets.lua
+generated\Availability.lua
 core\UI\CodeView.lua
 core\UI\Controls.lua
 core\UI\Card.lua
 core\UI\Page.lua
 core\UI\Window.lua
+
+examples\basics\Anchors.lua
+examples\basics\Layers.lua
+examples\basics\Scale.lua
+examples\basics\Events.lua
 
 examples\progress\StatusBar.lua
 examples\progress\StatusBar.xml
@@ -47,6 +53,8 @@ examples\layout\Tabs.lua
 examples\layout\ScrollList.lua
 examples\layout\ScrollList.xml
 examples\layout\Tooltip.lua
+examples\layout\HelpTip.lua
+examples\layout\LayoutFrames.lua
 
 examples\visuals\Texture.lua
 examples\visuals\Mask.lua
@@ -55,5 +63,17 @@ examples\visuals\Animation.xml
 examples\visuals\FontString.lua
 examples\visuals\Line.lua
 examples\visuals\Money.lua
+examples\visuals\ProcGlow.lua
+examples\visuals\Model.lua
+
+examples\systems\SecureButton.lua
+examples\systems\Secrets.lua
+examples\systems\Hyperlinks.lua
+
+examples\assets\AssetGrid.lua
+examples\assets\Atlas.lua
+examples\assets\Icon.lua
+examples\assets\Icon.xml
+examples\assets\Font.lua
 
 UIGallery.lua

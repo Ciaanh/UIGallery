@@ -68,6 +68,7 @@ ns.AddExample("tooltip", {
     controls = {
         {
             type = "choice", key = "anchor", label = "Anchor", default = "ANCHOR_RIGHT",
+            code = "GameTooltip:SetOwner(self, %s)",
             choices = {
                 { "ANCHOR_RIGHT" }, { "ANCHOR_LEFT" }, { "ANCHOR_TOP" }, { "ANCHOR_BOTTOM" },
                 { "ANCHOR_TOPLEFT" }, { "ANCHOR_BOTTOMRIGHT" }, { "ANCHOR_CURSOR" },

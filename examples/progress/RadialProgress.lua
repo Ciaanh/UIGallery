@@ -19,7 +19,7 @@ ns.AddComponent({
     api = {
         { "Texture:SetRadialProgressBarPercent(percent)", "Fill amount, 0 to 1. Accepts secret values (AllowedWhenTainted)." },
         { "Texture:SetRadialProgressBarStartOffset(offset)", "Where the fill starts, as a fraction of a turn. 0 is at the bottom.", "0" },
-        { "Texture:SetRadialProgressBarEndOffset(offset)", "Where the fill ends, as a fraction of a turn. Use with the start offset for an arc (exact semantics: see the arc example).", "1" },
+        { "Texture:SetRadialProgressBarEndOffset(offset)", "Where the fill ends, as a fraction of a turn. An absolute position, like the start: 0.125 to 0.875 is a 270 degree arc open at the bottom.", "1" },
         { "Texture:SetRadialProgressBarReverse(reverse)", "Fill counter-clockwise.", "false" },
         { "Texture:SetRadialProgressBarFeather(feather)", "Softness of the fill's leading edge, 0 to 1.", "0" },
         { "Texture:ClearRadialProgressBar()", "Back to a normal texture." },
@@ -27,7 +27,7 @@ ns.AddComponent({
         { "StatusBar:SetRenderMode(Enum.StatusBarRenderMode.Radial)", "The bar sets its texture's radial percent from its value instead of resizing it. Offsets, reverse and feather are set on GetStatusBarTexture()." },
         { "XML: <Texture><RadialProgressBar barFillPercent startOffset endOffset reverse feather/></Texture>", "Same settings declared on a texture." },
         { "XML: <StatusBar renderMode=\"Radial\">", "Radial status bar." },
-        { "Animation \"RadialProgress\": SetFromPercent / SetToPercent", "Animates the radial percent of its target (see the animation example)." },
+        { "anim:SetFromPercent(percent) / SetToPercent(percent)", "Animation created with group:CreateAnimation(\"RadialProgress\"): animates the radial percent of its target (see the animation example)." },
     },
     refs = {
         "Blizzard_APIDocumentationGenerated/SimpleTextureBaseAPIDocumentation.lua",
@@ -84,11 +84,11 @@ ns.AddExample("radial", {
         return ring
     end,
     controls = {
-        { type = "slider", key = "value", label = "Value", min = 0, max = 1, step = 0.01, default = 0.42 },
-        { type = "check", key = "smooth", label = "Smooth (interpolation)", default = true },
-        { type = "slider", key = "start", label = "Start offset (0 = bottom)", min = 0, max = 1, step = 0.05, default = 0.5 },
-        { type = "check", key = "reverse", label = "Reverse", default = false },
-        { type = "slider", key = "feather", label = "Feather", min = 0, max = 0.5, step = 0.01, default = 0 },
+        { type = "slider", key = "value", label = "Value", min = 0, max = 1, step = 0.01, default = 0.42, code = function(value, values) return ("ring:SetValue(%g, Enum.StatusBarInterpolation.%s)"):format(value, values.smooth and "ExponentialEaseOut" or "Immediate") end },
+        { type = "check", key = "smooth", label = "Smooth (interpolation)", default = true, code = false },
+        { type = "slider", key = "start", label = "Start offset (0 = bottom)", min = 0, max = 1, step = 0.05, default = 0.5, code = "ring:GetStatusBarTexture():SetRadialProgressBarStartOffset(%s)" },
+        { type = "check", key = "reverse", label = "Reverse", default = false, code = "ring:GetStatusBarTexture():SetRadialProgressBarReverse(%s)" },
+        { type = "slider", key = "feather", label = "Feather", min = 0, max = 0.5, step = 0.01, default = 0, code = "ring:GetStatusBarTexture():SetRadialProgressBarFeather(%s)" },
     },
     apply = function(ring, key, value, values)
         local texture = ring:GetStatusBarTexture()
@@ -117,8 +117,8 @@ ns.AddExample("radial", {
     id = "radial-arc",
     title = "Arc (Texture, XML)",
     description = "Two textures of the same full ring, each with a <RadialProgressBar>: the track is "
-        .. "always full, the fill follows the percent. Start 0.125 / end 0.875 should give a 270 degree "
-        .. "arc open at the bottom if the end offset is an absolute position; move the offsets to check.",
+        .. "always full, the fill follows the percent. Both offsets are absolute positions (0 = bottom): "
+        .. "start 0.125 / end 0.875 is a 270 degree arc open at the bottom.",
     height = 170,
     code = { "radial-arc", "radial-arc-usage" },
     create = function(stage)
@@ -127,9 +127,9 @@ ns.AddExample("radial", {
         return arc
     end,
     controls = {
-        { type = "slider", key = "percent", label = "Percent", min = 0, max = 1, step = 0.01, default = 0.6 },
-        { type = "slider", key = "start", label = "Start offset", min = 0, max = 1, step = 0.025, default = 0.125 },
-        { type = "slider", key = "finish", label = "End offset", min = 0, max = 1, step = 0.025, default = 0.875 },
+        { type = "slider", key = "percent", label = "Percent", min = 0, max = 1, step = 0.01, default = 0.6, code = "arc.Fill:SetRadialProgressBarPercent(%s)" },
+        { type = "slider", key = "start", label = "Start offset", min = 0, max = 1, step = 0.025, default = 0.125, code = function(value) return ("arc.Track:SetRadialProgressBarStartOffset(%g)\narc.Fill:SetRadialProgressBarStartOffset(%g)"):format(value, value) end },
+        { type = "slider", key = "finish", label = "End offset", min = 0, max = 1, step = 0.025, default = 0.875, code = function(value) return ("arc.Track:SetRadialProgressBarEndOffset(%g)\narc.Fill:SetRadialProgressBarEndOffset(%g)"):format(value, value) end },
     },
     apply = function(arc, key, value)
         if key == "percent" then
@@ -170,8 +170,7 @@ ns.AddExample("radial", {
     id = "radial-animation",
     title = "RadialProgress animation",
     description = "An animation type that moves a texture's radial percent from one value to another. "
-        .. "Unverified: the type name \"RadialProgress\" comes from the API docs' naming, and no Blizzard "
-        .. "UI uses it yet. If this card shows an error, the name is wrong.",
+        .. "Created with CreateAnimation(\"RadialProgress\"); no Blizzard UI uses it yet.",
     height = 150,
     code = { "radial-animation" },
     create = function(stage)
@@ -180,9 +179,9 @@ ns.AddExample("radial", {
         return ring
     end,
     controls = {
-        { type = "slider", key = "from", label = "From", min = 0, max = 1, step = 0.05, default = 0 },
-        { type = "slider", key = "to", label = "To", min = 0, max = 1, step = 0.05, default = 1 },
-        { type = "slider", key = "duration", label = "Duration (s)", min = 0.2, max = 4, step = 0.1, default = 1.5 },
+        { type = "slider", key = "from", label = "From", min = 0, max = 1, step = 0.05, default = 0, code = "ring.Fill:SetFromPercent(%s)" },
+        { type = "slider", key = "to", label = "To", min = 0, max = 1, step = 0.05, default = 1, code = "ring.Fill:SetToPercent(%s)" },
+        { type = "slider", key = "duration", label = "Duration (s)", min = 0.2, max = 4, step = 0.1, default = 1.5, code = "ring.Fill:SetDuration(%s)" },
         { type = "button", key = "play", label = "Play" },
     },
     apply = function(ring, key, value, values)

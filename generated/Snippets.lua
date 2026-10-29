@@ -3,6 +3,39 @@
 local _, ns = ...
 
 ns.Snippets = {
+    ["anchors-point"] = {
+        lang = "lua",
+        file = "examples/basics/Anchors.lua",
+        code = [[
+local function CreateBox(parent, width, height, r, g, b, label)
+    local box = CreateFrame("Frame", nil, parent)
+    box:SetSize(width, height)
+    local fill = box:CreateTexture(nil, "BACKGROUND")
+    fill:SetAllPoints()
+    fill:SetColorTexture(r, g, b, 0.6)
+    local text = box:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
+    text:SetPoint("CENTER")
+    text:SetText(label)
+    return box
+end
+
+local function AnchorBox(box, target, point, relativePoint, x, y)
+    box:ClearAllPoints()
+    box:SetPoint(point, target, relativePoint, x, y)
+end]],
+    },
+    ["anchors-stretch"] = {
+        lang = "lua",
+        file = "examples/basics/Anchors.lua",
+        code = [[
+-- Two anchors: the bar's width follows the target, its height is its own.
+local function StretchBar(bar, target, inset, spacing)
+    bar:ClearAllPoints()
+    bar:SetPoint("TOPLEFT", target, "BOTTOMLEFT", inset, -spacing)
+    bar:SetPoint("TOPRIGHT", target, "BOTTOMRIGHT", -inset, -spacing)
+    bar:SetHeight(20)
+end]],
+    },
     ["animation-basic"] = {
         lang = "lua",
         file = "examples/visuals/Animation.lua",
@@ -86,6 +119,121 @@ end]],
 local function CreateProcLoop(parent)
     -- UIGalleryFlipbookTemplate is declared in the XML tab; its OnShow plays the loop.
     return CreateFrame("Frame", nil, parent, "UIGalleryFlipbookTemplate")
+end]],
+    },
+    ["asset-grid"] = {
+        lang = "lua",
+        file = "examples/assets/AssetGrid.lua",
+        code = [[
+-- opts: width, height, cellWidth, cellHeight,
+--       filter(query) -> entries   (query is trimmed and lower case)
+--       initCell(cell, entry)      draws one entry; cells are recycled, so set everything
+--       label(entry) -> text       the tooltip
+--       onSelect(entry)            a click
+local function CreateAssetGrid(parent, opts)
+    local browser = CreateFrame("Frame", nil, parent)
+    browser:SetSize(opts.width, opts.height)
+
+    local search = CreateFrame("EditBox", nil, browser, "SearchBoxTemplate")
+    search:SetSize(240, 20)
+    search:SetPoint("TOPLEFT", 6, 0)
+
+    local count = browser:CreateFontString(nil, "ARTWORK", "GameFontDisableSmall")
+    count:SetPoint("LEFT", search, "RIGHT", 12, 0)
+
+    local grid = CreateFrame("Frame", nil, browser, "WowScrollBoxList")
+    grid:SetPoint("TOPLEFT", 0, -28)
+    grid:SetPoint("BOTTOMRIGHT", -16, 0)
+    local scrollBar = CreateFrame("EventFrame", nil, browser, "MinimalScrollBar")
+    scrollBar:SetPoint("TOPLEFT", grid, "TOPRIGHT", 6, 0)
+    scrollBar:SetPoint("BOTTOMLEFT", grid, "BOTTOMRIGHT", 6, 0)
+
+    -- As many columns as fit; a grid view sizes its cells with SetElementSize (not Extent).
+    local spacing = 4
+    local columns = math.max(1, math.floor((opts.width - 16 + spacing) / (opts.cellWidth + spacing)))
+    local view = CreateScrollBoxListGridView(columns, 0, 0, 0, 0, spacing, spacing)
+    view:SetElementSize(opts.cellWidth, opts.cellHeight)
+    view:SetElementInitializer("Button", function(cell, entry)
+        if not cell.Highlight then
+            cell.Background = cell:CreateTexture(nil, "BACKGROUND")
+            cell.Background:SetAllPoints()
+            cell.Background:SetColorTexture(1, 1, 1, 0.04)
+            cell.Highlight = cell:CreateTexture(nil, "HIGHLIGHT")
+            cell.Highlight:SetAllPoints()
+            cell.Highlight:SetColorTexture(1, 1, 1, 0.15)
+            cell:SetClipsChildren(true)
+            cell:SetScript("OnClick", function(self) opts.onSelect(self.entry) end)
+            cell:SetScript("OnEnter", function(self)
+                GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+                GameTooltip_SetTitle(GameTooltip, opts.label(self.entry))
+                GameTooltip:Show()
+            end)
+            cell:SetScript("OnLeave", GameTooltip_Hide)
+        end
+        cell.entry = entry
+        opts.initCell(cell, entry)
+    end)
+    ScrollUtil.InitScrollBoxListWithScrollBar(grid, scrollBar, view)
+
+    local function Refresh()
+        local entries = opts.filter(strtrim(search:GetText()):lower())
+        grid:SetDataProvider(CreateDataProvider(entries))
+        count:SetFormattedText("%d shown", #entries)
+    end
+
+    -- Filter once typing pauses: rebuilding a list of thousands per keystroke stutters.
+    local timer
+    search:HookScript("OnTextChanged", function()
+        if timer then
+            timer:Cancel()
+        end
+        timer = C_Timer.NewTimer(0.25, Refresh)
+    end)
+    Refresh()
+    return browser
+end]],
+    },
+    ["atlas-browser"] = {
+        lang = "lua",
+        file = "examples/assets/Atlas.lua",
+        code = [[
+local atlasEntries
+
+-- The full list, once: one table per atlas so the DataProvider can tell them apart.
+local function GetAtlasEntries()
+    if not atlasEntries then
+        local names = C_Texture.GetAtlasElements()
+        table.sort(names)
+        atlasEntries = {}
+        for i, name in ipairs(names) do
+            atlasEntries[i] = { name = name, lower = name:lower() }
+        end
+    end
+    return atlasEntries
+end
+
+local function FilterAtlases(query)
+    local all = GetAtlasEntries()
+    if query == "" then
+        return all
+    end
+    local matches = {}
+    for _, entry in ipairs(all) do
+        if entry.lower:find(query, 1, true) then
+            matches[#matches + 1] = entry
+        end
+    end
+    return matches
+end
+
+-- Fits the atlas into the cell, keeping its aspect ratio.
+local function DrawAtlas(texture, name, box)
+    local info = C_Texture.GetAtlasInfo(name)
+    local width, height = info and info.width or box, info and info.height or box
+    local scale = math.min(box / math.max(width, 1), box / math.max(height, 1))
+    texture:SetAtlas(name)
+    texture:SetSize(math.max(width * scale, 1), math.max(height * scale, 1))
+    return info
 end]],
     },
     ["button-icon"] = {
@@ -514,6 +662,151 @@ local function CreateFilterBox(parent, onFilter)
     return search
 end]],
     },
+    ["events-callbacks"] = {
+        lang = "lua",
+        file = "examples/basics/Events.lua",
+        code = [[
+local function CreateCounterModel()
+    local model = CreateFromMixins(CallbackRegistryMixin)
+    model:OnLoad()
+    model:GenerateCallbackEvents({ "OnChanged" })
+    model.value = 0
+
+    function model:Increment()
+        self.value = self.value + 1
+        self:TriggerEvent(self.Event.OnChanged, self.value)
+    end
+    return model
+end
+
+-- A view follows the model: the callback gets the owner first, then the event's arguments.
+local function CreateCounterView(parent, model, label)
+    local view = parent:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+    view.label = label
+    view:SetText(label .. ": 0")
+    function view:Follow(following)
+        if following then
+            model:RegisterCallback(model.Event.OnChanged, function(owner, value)
+                owner:SetText(owner.label .. ": " .. value)
+            end, view)
+        else
+            model:UnregisterCallback(model.Event.OnChanged, view)
+        end
+    end
+    return view
+end]],
+    },
+    ["events-log"] = {
+        lang = "lua",
+        file = "examples/basics/Events.lua",
+        code = [[
+local EVENTS = { "MODIFIER_STATE_CHANGED", "PLAYER_TARGET_CHANGED" }
+
+local function CreateEventLog(parent)
+    local log = CreateFrame("Frame", nil, parent)
+    log:SetSize(380, 90)
+    log.Text = log:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
+    log.Text:SetPoint("TOPLEFT")
+    log.Text:SetJustifyH("LEFT")
+    log.lines = {}
+
+    function log:Add(text)
+        table.insert(self.lines, 1, text)
+        self.lines[6] = nil
+        self.Text:SetText(table.concat(self.lines, "\n"))
+    end
+
+    -- One method per event, named after it.
+    function log:MODIFIER_STATE_CHANGED(key, down)
+        self:Add(("MODIFIER_STATE_CHANGED %s %s"):format(key, down == 1 and "down" or "up"))
+    end
+    function log:PLAYER_TARGET_CHANGED()
+        self:Add("PLAYER_TARGET_CHANGED, target exists: " .. tostring(UnitExists("target")))
+    end
+    log:SetScript("OnEvent", function(self, event, ...)
+        self[event](self, ...)
+    end)
+
+    -- Listen only while shown: a closed window costs nothing.
+    log:SetScript("OnShow", function(self)
+        FrameUtil.RegisterFrameForEvents(self, EVENTS)
+        self:Add("OnShow: events registered")
+    end)
+    log:SetScript("OnHide", function(self)
+        FrameUtil.UnregisterFrameForEvents(self, EVENTS)
+    end)
+    if log:IsVisible() then
+        FrameUtil.RegisterFrameForEvents(log, EVENTS)
+    end
+    return log
+end]],
+    },
+    ["events-onupdate"] = {
+        lang = "lua",
+        file = "examples/basics/Events.lua",
+        code = [[
+local function CreateThrottledCounter(parent, interval)
+    local counter = CreateFrame("Frame", nil, parent)
+    counter:SetSize(300, 40)
+    counter.Text = counter:CreateFontString(nil, "ARTWORK", "GameFontHighlightLarge")
+    counter.Text:SetPoint("CENTER")
+    counter.interval = interval
+    counter.elapsed, counter.frames, counter.ticks = 0, 0, 0
+
+    -- Runs every drawn frame; the real work only once per interval.
+    function counter:OnUpdate(elapsed)
+        self.frames = self.frames + 1
+        self.elapsed = self.elapsed + elapsed
+        if self.elapsed < self.interval then
+            return
+        end
+        self.elapsed = 0
+        self.ticks = self.ticks + 1
+        self.Text:SetFormattedText("%d ticks, %d frames", self.ticks, self.frames)
+    end
+
+    function counter:SetRunning(running)
+        self:SetScript("OnUpdate", running and self.OnUpdate or nil)
+    end
+    return counter
+end]],
+    },
+    ["font-browser"] = {
+        lang = "lua",
+        file = "examples/assets/Font.lua",
+        code = [[
+local fontEntries
+
+local function GetFontEntries()
+    if not fontEntries then
+        fontEntries = {}
+        local names = GetFonts()
+        table.sort(names)
+        for _, name in ipairs(names) do
+            local object = _G[name]
+            -- A few names have no global object; skip them.
+            if type(object) == "table" and object.GetFont then
+                fontEntries[#fontEntries + 1] = { name = name, object = object, lower = name:lower() }
+            end
+        end
+    end
+    return fontEntries
+end
+
+local function FilterFonts(query)
+    local all = GetFontEntries()
+    if query == "" then
+        return all
+    end
+    local matches = {}
+    for _, entry in ipairs(all) do
+        if entry.lower:find(query, 1, true) then
+            matches[#matches + 1] = entry
+        end
+    end
+    return matches
+end]],
+    },
     ["fontstring-basic"] = {
         lang = "lua",
         file = "examples/visuals/FontString.lua",
@@ -546,6 +839,207 @@ local function ApplyTextStyle(text, style)
     end
 end]],
     },
+    ["helptip-glowbox"] = {
+        lang = "lua",
+        file = "examples/layout/HelpTip.lua",
+        code = [[
+local function CreateGlowCallout(parent, text)
+    local box = CreateFrame("Frame", nil, parent, "GlowBoxTemplate")
+    box:SetSize(240, 56)
+    box.Text = box:CreateFontString(nil, "ARTWORK", "GameFontHighlightLeft")
+    box.Text:SetPoint("TOPLEFT", 12, -10)
+    box.Text:SetPoint("BOTTOMRIGHT", -12, 10)
+    box.Text:SetText(text)
+
+    box.Arrow = CreateFrame("Frame", nil, box, "GlowBoxArrowTemplate")
+    box.Arrow:SetPoint("TOP", box, "BOTTOM", 0, 3)
+    return box
+end]],
+    },
+    ["helptip-show"] = {
+        lang = "lua",
+        file = "examples/layout/HelpTip.lua",
+        code = [[
+local TIP_TEXT = "This button does something new. Try it."
+
+local function ShowTip(owner, target, pointName, styleName, onAcknowledge)
+    HelpTip:Hide(owner, TIP_TEXT)
+    return HelpTip:Show(owner, {
+        text = TIP_TEXT,
+        buttonStyle = HelpTip.ButtonStyle[styleName],
+        targetPoint = HelpTip.Point[pointName],
+        alignment = HelpTip.Alignment.Center,
+        onAcknowledgeCallback = onAcknowledge,
+        system = "UIGalleryDemo",
+    }, target)
+end]],
+    },
+    ["hyperlinks-chat"] = {
+        lang = "lua",
+        file = "examples/systems/Hyperlinks.lua",
+        code = [[
+local chatOwner = {}
+
+-- Chat sends clicks on "addon:" links to EventRegistry's "SetItemRef" event. One callback per
+-- owner: registering again replaces it.
+local function ListenToChatLinks(onClick)
+    EventRegistry:RegisterCallback("SetItemRef", function(_, link)
+        if link:find("^addon:UIGallery:") then
+            onClick(link)
+        end
+    end, chatOwner)
+end
+
+local function PrintAddonLink()
+    local link = LinkUtil.FormatLink("addon", "[Click me]", "UIGallery", "chat")
+    print("UIGallery: \124cff40c040" .. link .. "\124r")
+end]],
+    },
+    ["hyperlinks-frame"] = {
+        lang = "lua",
+        file = "examples/systems/Hyperlinks.lua",
+        code = [[
+-- "\124" is the pipe, the escape character of WoW text: \124c colour, \124H link, \124r reset.
+local HEARTHSTONE = "\124cffffffff\124Hitem:6948\124h[Hearthstone]\124h\124r"
+local FIREBALL = "\124cff71d5ff\124Hspell:133\124h[Fireball]\124h\124r"
+local OWN_LINK = "\124cff40c040\124Haddon:UIGallery:demo\124h[an addon link]\124h\124r"
+
+local function CreateLinkText(parent, onAddonLink)
+    local frame = CreateFrame("Frame", nil, parent)
+    frame:SetSize(420, 60)
+    frame:EnableMouse(true)
+    frame:SetHyperlinksEnabled(true)
+
+    local text = frame:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+    text:SetPoint("TOPLEFT")
+    text:SetWidth(420)
+    text:SetJustifyH("LEFT")
+    text:SetText(("Hover %s or %s, click them, shift-click with the chat box open, or click %s.")
+        :format(HEARTHSTONE, FIREBALL, OWN_LINK))
+
+    frame:SetScript("OnHyperlinkEnter", function(self, link)
+        if not link:find("^addon:") then
+            GameTooltip:SetOwner(self, "ANCHOR_CURSOR")
+            GameTooltip:SetHyperlink(link)
+            GameTooltip:Show()
+        end
+    end)
+    frame:SetScript("OnHyperlinkLeave", GameTooltip_Hide)
+    frame:SetScript("OnHyperlinkClick", function(self, link, linkText, button)
+        if link:find("^addon:UIGallery:") then
+            onAddonLink(link)
+        else
+            -- What chat does: tooltip, shift-click to insert, ctrl-click to try on.
+            SetItemRef(link, linkText, button, self)
+        end
+    end)
+    return frame
+end]],
+    },
+    ["icon-browser"] = {
+        lang = "lua",
+        file = "examples/assets/Icon.lua",
+        code = [[
+local iconEntries
+
+local function GetIconEntries()
+    if not iconEntries then
+        local provider = CreateAndInitFromMixin(IconDataProviderMixin, IconDataProviderExtraType.None)
+        iconEntries = {}
+        for i = 1, provider:GetNumIcons() do
+            local icon = provider:GetIconByIndex(i)
+            iconEntries[i] = { icon = icon, lower = tostring(icon):lower() }
+        end
+        -- The provider's list is shared and large; keep the copy, free the original.
+        provider:Release()
+    end
+    return iconEntries
+end
+
+local function FilterIcons(query)
+    local all = GetIconEntries()
+    if query == "" then
+        return all
+    end
+    local matches = {}
+    for _, entry in ipairs(all) do
+        if entry.lower:find(query, 1, true) then
+            matches[#matches + 1] = entry
+        end
+    end
+    return matches
+end]],
+    },
+    ["icon-picker"] = {
+        lang = "xml",
+        file = "examples/assets/Icon.xml",
+        code = [[
+<!-- The macro / guild bank / outfit icon popup: Blizzard's template, our mixin on top. -->
+<Frame name="UIGalleryIconPickerTemplate" inherits="IconSelectorPopupFrameTemplate" mixin="UIGalleryIconPickerMixin" frameStrata="DIALOG" toplevel="true" enableMouse="true" hidden="true" virtual="true">
+    <KeyValues>
+        <KeyValue key="editBoxHeaderText" value="Name (anything, kept by the popup):" type="string"/>
+    </KeyValues>
+</Frame>]],
+    },
+    ["icon-picker-mixin"] = {
+        lang = "lua",
+        file = "examples/assets/Icon.lua",
+        code = [[
+UIGalleryIconPickerMixin = {}
+
+function UIGalleryIconPickerMixin:OnShow()
+    IconSelectorPopupFrameTemplateMixin.OnShow(self)
+    self.iconDataProvider = CreateAndInitFromMixin(IconDataProviderMixin, IconDataProviderExtraType.None)
+    local provider = self.iconDataProvider
+    self.IconSelector:SetSelectionsDataProvider(GenerateClosure(provider.GetIconByIndex, provider),
+        GenerateClosure(provider.GetNumIcons, provider))
+
+    local selectedButton = self.BorderBox.SelectedIconArea.SelectedIconButton
+    self.IconSelector:SetSelectedCallback(function(_, icon)
+        selectedButton:SetIconTexture(icon)
+        self:SetSelectedIconText()
+    end)
+    -- Start on the current icon, or the question mark (index 1).
+    local index = self.icon and self:GetIndexOfIcon(self.icon) or 1
+    self.IconSelector:SetSelectedIndex(index)
+    selectedButton:SetIconTexture(self:GetIconByIndex(index))
+    self.IconSelector:ScrollToSelectedIndex()
+    self:SetSelectedIconText()
+end
+
+function UIGalleryIconPickerMixin:OnHide()
+    IconSelectorPopupFrameTemplateMixin.OnHide(self)
+    -- The icon list is large and shared: release it while the popup is closed.
+    self.iconDataProvider:Release()
+    self.iconDataProvider = nil
+end
+
+function UIGalleryIconPickerMixin:OkayButton_OnClick()
+    self.icon = self.BorderBox.SelectedIconArea.SelectedIconButton:GetIconTexture()
+    IconSelectorPopupFrameTemplateMixin.OkayButton_OnClick(self) -- hides the popup
+    if self.onAccept then
+        self.onAccept(self.icon, self.BorderBox.IconSelectorEditBox:GetText())
+    end
+end]],
+    },
+    ["icon-picker-open"] = {
+        lang = "lua",
+        file = "examples/assets/Icon.lua",
+        code = [[
+local picker
+
+local function OpenIconPicker(onAccept)
+    if not picker then
+        picker = CreateFrame("Frame", nil, UIParent, "UIGalleryIconPickerTemplate")
+        -- The template anchors its TOPLEFT to its parent's TOPRIGHT (it was made to sit beside
+        -- the macro window): on UIParent that is off screen. Clear it before placing it.
+        picker:ClearAllPoints()
+        picker:SetPoint("CENTER")
+    end
+    picker.onAccept = onAccept
+    picker:Show()
+end]],
+    },
     ["itembutton-basic"] = {
         lang = "lua",
         file = "examples/controls/ItemButton.lua",
@@ -568,6 +1062,119 @@ local function ShowItem(button, itemID, count)
     button.itemID = itemID
     button:SetItem(itemID)
     button:SetItemButtonCount(count)
+end]],
+    },
+    ["layers-draw"] = {
+        lang = "lua",
+        file = "examples/basics/Layers.lua",
+        code = [[
+local function CreateLayeredSquares(parent)
+    -- Mouse enabled, so the HIGHLIGHT layer shows while the cursor is over the frame.
+    local frame = CreateFrame("Frame", nil, parent)
+    frame:SetSize(200, 120)
+    frame:EnableMouse(true)
+
+    local function Square(layer, sublevel, r, g, b, x, y)
+        local square = frame:CreateTexture(nil, layer, nil, sublevel)
+        square:SetSize(90, 70)
+        square:SetPoint("CENTER", x, y)
+        square:SetColorTexture(r, g, b)
+        return square
+    end
+    frame.Green = Square("ARTWORK", 0, 0.2, 0.75, 0.3, 0, 0)
+    frame.Red = Square("BORDER", 0, 0.85, 0.2, 0.15, -40, 20)
+    return frame
+end]],
+    },
+    ["layers-frames"] = {
+        lang = "lua",
+        file = "examples/basics/Layers.lua",
+        code = [[
+local function CreateCard(parent, r, g, b, label)
+    local card = CreateFrame("Frame", nil, parent)
+    card:SetSize(150, 90)
+    local fill = card:CreateTexture(nil, "BACKGROUND")
+    fill:SetAllPoints()
+    fill:SetColorTexture(r, g, b, 0.95)
+    card.Label = card:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+    card.Label:SetPoint("TOPLEFT", 8, -8)
+    card.Label:SetText(label)
+    return card
+end
+
+-- Frame levels are absolute: place a frame relative to its parent's level.
+local function SetLevelAbove(frame, parent, offset)
+    frame:SetFrameLevel(parent:GetFrameLevel() + offset)
+end]],
+    },
+    ["layoutframes-grid"] = {
+        lang = "lua",
+        file = "examples/layout/LayoutFrames.lua",
+        code = [[
+local function CreateNumberedSquares(parent, count)
+    local pool = CreateFramePool("Frame", parent)
+    local squares = {}
+    for i = 1, count do
+        local square, isNew = pool:Acquire()
+        if isNew then
+            square:SetSize(36, 36)
+            local fill = square:CreateTexture(nil, "BACKGROUND")
+            fill:SetAllPoints()
+            fill:SetColorTexture(0.25, 0.5, 0.3, 0.9)
+            square.Text = square:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+            square.Text:SetPoint("CENTER")
+        end
+        square.Text:SetText(i)
+        square:Show()
+        squares[i] = square
+    end
+    return squares
+end
+
+local function ArrangeInGrid(squares, parent, directionName, stride, padding)
+    local direction = GridLayoutMixin.Direction[directionName]
+    local layout = AnchorUtil.CreateGridLayout(direction, stride, padding, padding)
+    local point = direction.x > 0 and "TOPLEFT" or "TOPRIGHT"
+    local anchor = AnchorUtil.CreateAnchor(point, parent, point, 0, 0)
+    AnchorUtil.GridLayout(squares, anchor, layout)
+end]],
+    },
+    ["layoutframes-stack"] = {
+        lang = "lua",
+        file = "examples/layout/LayoutFrames.lua",
+        code = [[
+local WORDS = { "Tank", "Healer", "Damage", "Mythic+", "Raid", "Voice", "Casual", "Achievements" }
+
+-- Builds a tag's regions the first time the pool hands it out.
+local function InitTag(tag)
+    tag:SetHeight(22)
+    local fill = tag:CreateTexture(nil, "BACKGROUND")
+    fill:SetAllPoints()
+    fill:SetColorTexture(0.2, 0.35, 0.6, 0.8)
+    tag.Text = tag:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
+    tag.Text:SetPoint("CENTER")
+end
+
+local function CreateTagStack(parent, template)
+    local stack = CreateFrame("Frame", nil, parent, template)
+    stack.pool = CreateFramePool("Frame", stack)
+    return stack
+end
+
+local function ShowTags(stack, count, spacing)
+    stack.pool:ReleaseAll()
+    stack.spacing = spacing
+    for i = 1, count do
+        local tag, isNew = stack.pool:Acquire()
+        if isNew then
+            InitTag(tag)
+        end
+        tag.Text:SetText(WORDS[i])
+        tag:SetWidth(tag.Text:GetStringWidth() + 16)
+        tag.layoutIndex = i
+        tag:Show()
+    end
+    stack:Layout()
 end]],
     },
     ["line-basic"] = {
@@ -638,6 +1245,33 @@ local function SetMaskShape(icon, shape)
     icon.Mask:SetTexture(MASK_FILES[shape], "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
     icon:RemoveMaskTexture(icon.Mask)
     icon:AddMaskTexture(icon.Mask)
+end]],
+    },
+    ["model-player"] = {
+        lang = "lua",
+        file = "examples/visuals/Model.lua",
+        code = [[
+local function CreatePlayerPreview(parent, width, height)
+    local model = CreateFrame("PlayerModel", nil, parent)
+    model:SetSize(width, height)
+    model:SetUnit("player")
+
+    -- Drag to turn the model: OnUpdate only while the button is held.
+    local function FollowCursor(self)
+        local x = GetCursorPosition()
+        self.facing = (self.facing or 0) + (x - self.dragX) * 0.01
+        self.dragX = x
+        self:SetFacing(self.facing)
+    end
+    model:EnableMouse(true)
+    model:SetScript("OnMouseDown", function(self)
+        self.dragX = GetCursorPosition()
+        self:SetScript("OnUpdate", FollowCursor)
+    end)
+    model:SetScript("OnMouseUp", function(self)
+        self:SetScript("OnUpdate", nil)
+    end)
+    return model
 end]],
     },
     ["money-basic"] = {
@@ -723,6 +1357,42 @@ local function GetLayoutMinimumSize(layoutName)
         return 0, 0
     end
     return 2 * info.width, 2 * info.height
+end]],
+    },
+    ["procglow-button"] = {
+        lang = "lua",
+        file = "examples/visuals/ProcGlow.lua",
+        code = [[
+local function CreateProcButton(parent, icon, size)
+    local button = CreateFrame("Button", nil, parent)
+    button:SetSize(size, size)
+    button.Icon = button:CreateTexture(nil, "ARTWORK")
+    button.Icon:SetAllPoints()
+    button.Icon:SetTexture(icon)
+
+    local alert = CreateFrame("Frame", nil, button, "ActionButtonSpellAlertTemplate")
+    alert:SetSize(size * 1.4, size * 1.4)
+    alert:SetPoint("CENTER")
+    button.Alert = alert
+    return button
+end
+
+local function SetProcGlow(button, active, skipBirth)
+    local alert = button.Alert
+    alert.ProcStartAnim:Stop()
+    alert.animationPlaying = false
+    if not active then
+        alert:Hide() -- the template's OnHide stops the loop
+        return
+    end
+    alert:Show()
+    -- Set after Show: OnShow would start the loop on top of the birth otherwise.
+    alert.animationPlaying = true
+    if skipBirth then
+        alert.ProcLoop:Play()
+    else
+        alert.ProcStartAnim:Play()
+    end
 end]],
     },
     ["radial-animation"] = {
@@ -849,6 +1519,41 @@ local function CreateRadioGroup(parent, options, onSelect)
     return group
 end]],
     },
+    ["scale-lines"] = {
+        lang = "lua",
+        file = "examples/basics/Scale.lua",
+        code = [[
+local function CreateLineSamples(parent)
+    local frame = CreateFrame("Frame", nil, parent)
+    frame:SetSize(260, 110)
+
+    local function Line(y, label)
+        local line = frame:CreateTexture(nil, "ARTWORK")
+        line:SetColorTexture(1, 1, 1)
+        line:SetPoint("TOPLEFT", 90, y)
+        line:SetPoint("TOPRIGHT", -10, y)
+        local text = frame:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
+        text:SetPoint("RIGHT", line, "LEFT", -8, 0)
+        text:SetText(label)
+        return line
+    end
+    -- 1 UI unit: at most scales that is not a whole number of pixels.
+    frame.Raw = Line(-20, "1 unit")
+    frame.Raw:SetHeight(1)
+    -- Exactly one pixel at the frame's current effective scale: recompute when the scale changes.
+    frame.Pixel = Line(-50, "1 pixel")
+    -- The engine rounds this one: size and anchors snap to whole pixels.
+    frame.Rounded = Line(-80, "rounded")
+    frame.Rounded:SetHeight(1)
+    frame.Rounded:SetRoundLayoutToNearestPixel(true)
+    return frame
+end
+
+local function UpdatePixelLine(frame)
+    local onePixel = PixelUtil.GetNearestPixelSize(1, frame:GetEffectiveScale(), 1)
+    frame.Pixel:SetHeight(onePixel)
+end]],
+    },
     ["scrolllist-lua"] = {
         lang = "lua",
         file = "examples/layout/ScrollList.lua",
@@ -878,6 +1583,57 @@ local function CreateZoneList(parent)
     local provider = CreateDataProvider()
     for i = 1, 60 do
         provider:Insert({ index = i, name = "Zone " .. i })
+    end
+    list:SetDataProvider(provider)
+    list.provider = provider
+    return list
+end]],
+    },
+    ["scrolllist-tree"] = {
+        lang = "lua",
+        file = "examples/layout/ScrollList.lua",
+        code = [[
+local function CreateZoneTree(parent, continents)
+    local list = CreateFrame("Frame", nil, parent, "WowScrollBoxList")
+    list:SetSize(260, 150)
+    local scrollBar = CreateFrame("EventFrame", nil, parent, "MinimalScrollBar")
+    scrollBar:SetPoint("TOPLEFT", list, "TOPRIGHT", 6, 0)
+    scrollBar:SetPoint("BOTTOMLEFT", list, "BOTTOMRIGHT", 6, 0)
+
+    -- Rows are indented by 16 per depth level; the initializer receives the node.
+    local view = CreateScrollBoxListTreeListView(16)
+    view:SetElementExtent(20)
+    view:SetElementInitializer("Button", function(row, node)
+        if not row.Label then
+            row.Label = row:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
+            row.Label:SetPoint("LEFT", 6, 0)
+            local highlight = row:CreateTexture(nil, "HIGHLIGHT")
+            highlight:SetAllPoints()
+            highlight:SetColorTexture(1, 1, 1, 0.1)
+            row:SetScript("OnClick", function(self)
+                if self.node:GetData().isHeader then
+                    self.node:ToggleCollapsed()
+                end
+            end)
+        end
+        row.node = node
+        local data = node:GetData()
+        if data.isHeader then
+            row.Label:SetFontObject("GameFontNormal")
+            row.Label:SetText((node:IsCollapsed() and "+ " or "- ") .. data.name)
+        else
+            row.Label:SetFontObject("GameFontHighlightSmall")
+            row.Label:SetText(data.name)
+        end
+    end)
+    ScrollUtil.InitScrollBoxListWithScrollBar(list, scrollBar, view)
+
+    local provider = CreateTreeDataProvider()
+    for _, continent in ipairs(continents) do
+        local node = provider:Insert({ name = continent.name, isHeader = true })
+        for _, zone in ipairs(continent.zones) do
+            node:Insert({ name = zone })
+        end
     end
     list:SetDataProvider(provider)
     list.provider = provider
@@ -947,6 +1703,119 @@ local function CreateItemList(parent, items)
     ScrollUtil.InitScrollBoxListWithScrollBar(list, scrollBar, view)
     list:SetDataProvider(CreateDataProvider(items))
     return list
+end]],
+    },
+    ["secrets-probe"] = {
+        lang = "lua",
+        file = "examples/systems/Secrets.lua",
+        code = [[
+-- The value when this code may use it, else nil: test for secrecy, never the value itself.
+local function Plain(value)
+    if issecretvalue(value) then
+        return nil
+    end
+    return value
+end
+
+-- Runs fn and describes the outcome instead of raising.
+local function Try(fn, ...)
+    local ok, result = pcall(fn, ...)
+    if not ok then
+        return "error: " .. (tostring(result):gsub("^.-:%d+: ", ""))
+    elseif issecretvalue(result) then
+        return "ok, the result is secret"
+    elseif result == nil then
+        return "ok"
+    end
+    return "ok: " .. tostring(result)
+end
+
+local function ProbeSecrets(fontString)
+    local wrapped, secret = pcall(secretwrap, 42)
+    if not wrapped then
+        return { { "secretwrap(42)", "error: " .. tostring(secret) } }
+    end
+    return {
+        { "C_Secrets.HasSecretRestrictions()", Try(C_Secrets.HasSecretRestrictions) },
+        { "C_Secrets.ShouldAurasBeSecret()", Try(C_Secrets.ShouldAurasBeSecret) },
+        { "C_Secrets.ShouldCooldownsBeSecret()", Try(C_Secrets.ShouldCooldownsBeSecret) },
+        { "issecretvalue(secret)", Try(issecretvalue, secret) },
+        { "canaccessvalue(secret)", Try(canaccessvalue, secret) },
+        { "Plain(secret)", Try(Plain, secret) },
+        { "secret + 1", Try(function() return secret + 1 end) },
+        { "secret == 42", Try(function() return secret == 42 end) },
+        { "tostring(secret)", Try(tostring, secret) },
+        { "scrubsecretvalues(secret, 7)", Try(function()
+            local a, b = scrubsecretvalues(secret, 7)
+            return tostring(a) .. ", " .. tostring(b)
+        end) },
+        { "fontString:SetText(secret)", Try(fontString.SetText, fontString, secret) },
+    }
+end]],
+    },
+    ["securebutton-window"] = {
+        lang = "lua",
+        file = "examples/systems/SecureButton.lua",
+        code = [[
+-- A small window of its own on UIParent: it cannot be hidden in combat (it contains a protected
+-- button), so it must not be part of a window that should still close then.
+local function CreateSecureWindow()
+    local window = CreateFrame("Frame", nil, UIParent, "DefaultPanelTemplate")
+    window:SetSize(240, 110)
+    window:SetPoint("CENTER", 350, 0)
+    window:SetFrameStrata("DIALOG")
+    window:SetTitle("Secure button")
+    window:EnableMouse(true)
+    window:SetMovable(true)
+    window:RegisterForDrag("LeftButton")
+    window:SetScript("OnDragStart", function(self)
+        if not InCombatLockdown() then
+            self:StartMoving()
+        end
+    end)
+    window:SetScript("OnDragStop", window.StopMovingOrSizing)
+
+    window.Status = window:CreateFontString(nil, "ARTWORK", "GameFontDisableSmall")
+    window.Status:SetPoint("BOTTOM", 0, 12)
+
+    local close = CreateFrame("Button", nil, window, "UIPanelCloseButton")
+    close:SetPoint("TOPRIGHT", 0, 0)
+    close:SetScript("OnClick", function()
+        if InCombatLockdown() then
+            -- Refused now: close when combat ends.
+            window.Status:SetText("In combat: closes after combat")
+            window:RegisterEvent("PLAYER_REGEN_ENABLED")
+        else
+            window:Hide()
+        end
+    end)
+    window:SetScript("OnEvent", function(self, event)
+        if event == "PLAYER_REGEN_ENABLED" then
+            self:UnregisterEvent(event)
+            self.Status:SetText("")
+            self:Hide()
+        end
+    end)
+
+    -- Secure template first, visuals after: UIPanelButtonTemplate has no OnClick to override it.
+    local button = CreateFrame("Button", nil, window, "SecureActionButtonTemplate, UIPanelButtonTemplate")
+    button:SetSize(180, 26)
+    button:SetPoint("CENTER", 0, -4)
+    button:RegisterForClicks("AnyUp", "AnyDown")
+    window.Button = button
+    return window
+end
+
+-- Out of combat only; returns false when refused.
+local function SetSecureAction(button, kind, argument, label)
+    if InCombatLockdown() then
+        return false
+    end
+    button:SetAttribute("type", kind)
+    button:SetAttribute("macrotext", kind == "macro" and argument or nil)
+    button:SetAttribute("unit", kind == "target" and argument or nil)
+    button:SetText(label)
+    return true
 end]],
     },
     ["slider-minimal"] = {

@@ -14,6 +14,10 @@ Capabilities.LABELS = {
     tabSystem = "TabSystemTemplate",
     minimalSlider = "MinimalSliderWithSteppersTemplate",
     scrollBox = "ScrollBox lists (CreateScrollBoxListLinearView)",
+    atlasList = "the atlas list (C_Texture.GetAtlasElements)",
+    iconProvider = "IconDataProviderMixin",
+    fontList = "the font object list (GetFonts)",
+    secrets = "secret values (issecretvalue, secretwrap, C_Secrets)",
 }
 
 local has = {}
@@ -28,6 +32,11 @@ function Capabilities:Probe()
     has.tabSystem = TabSystemMixin ~= nil
     has.minimalSlider = MinimalSliderWithSteppersMixin ~= nil
     has.scrollBox = CreateScrollBoxListLinearView ~= nil and ScrollUtil ~= nil
+    has.atlasList = C_Texture ~= nil and C_Texture.GetAtlasElements ~= nil
+    has.iconProvider = IconDataProviderMixin ~= nil and IconDataProviderExtraType ~= nil
+    has.fontList = GetFonts ~= nil
+    has.secrets = issecretvalue ~= nil and secretwrap ~= nil and scrubsecretvalues ~= nil
+        and C_Secrets ~= nil and C_Secrets.HasSecretRestrictions ~= nil
 end
 
 function Capabilities:Has(name)

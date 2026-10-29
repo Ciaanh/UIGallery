@@ -25,3 +25,17 @@ All notable changes to this project are documented here. The format follows
   (Lua row, XML row template); tooltips.
 - Visuals: textures and atlases, mask textures, animations (basic types, XML flipbook), font
   strings, lines and the divider atlas, money frame and money strings.
+- Basics: anchors (one point, two-point stretch), strata / frame levels / draw layers, scale and
+  pixel size (1-unit vs 1-pixel vs rounded lines), scripts and events (events registered while
+  shown, throttled OnUpdate, CallbackRegistryMixin).
+- Game systems: secure action button in its own window (combat lockdown), secret values (a live
+  probe of what addon code may do with one), hyperlinks (links in your own frame, addon links in
+  chat).
+- Assets: searchable atlas, icon and font browsers (ScrollBox grid) with the code for the
+  selected entry; Blizzard's icon picker popup reused through an XML template.
+- Layout: help tips and GlowBoxTemplate, layout frames with frame pools, AnchorUtil grid layout,
+  ScrollBox tree list. Visuals: action-button proc glow, PlayerModel.
+- Under each example's controls, the calls matching the current settings; an "All code" button
+  per page.
+- API rows marked with the clients whose UI source has them (Retail, Forever, Classic), generated
+  by `tools/gen-availability.py` from `Blizzard_UI_refs`; hover a red client for what is missing.

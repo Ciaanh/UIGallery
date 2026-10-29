@@ -72,9 +72,9 @@ ns.AddExample("line", {
         return holder
     end,
     controls = {
-        { type = "slider", key = "x", label = "Right dot X", min = -100, max = 200, step = 5, default = 150 },
-        { type = "slider", key = "y", label = "Right dot Y", min = -40, max = 60, step = 5, default = 50 },
-        { type = "slider", key = "thickness", label = "Thickness", min = 1, max = 12, step = 1, default = 2 },
+        { type = "slider", key = "x", label = "Right dot X", min = -100, max = 200, step = 5, default = 150, code = function(_, values) return ('to:SetPoint("CENTER", %d, %d) -- the line follows its anchor'):format(values.x, values.y) end },
+        { type = "slider", key = "y", label = "Right dot Y", min = -40, max = 60, step = 5, default = 50, code = false },
+        { type = "slider", key = "thickness", label = "Thickness", min = 1, max = 12, step = 1, default = 2, code = "line:SetThickness(%s)" },
     },
     apply = function(holder, key, value, values)
         if key == "thickness" then

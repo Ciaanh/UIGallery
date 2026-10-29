@@ -23,10 +23,13 @@ local Registry = {}
 ns.Registry = Registry
 
 Registry.FAMILIES = {
+    { id = "basics", title = "Basics" },
     { id = "progress", title = "Progress & timers" },
     { id = "controls", title = "Controls" },
     { id = "layout", title = "Layout & containers" },
     { id = "visuals", title = "Visuals" },
+    { id = "systems", title = "Game systems" },
+    { id = "assets", title = "Assets" },
 }
 
 local familyById = {}

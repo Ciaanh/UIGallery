@@ -38,6 +38,10 @@ local function Apply(card, key, value, values)
             card.Status:SetText("apply(" .. tostring(key) .. ") failed: " .. tostring(err))
         end
     end
+    if card.Live then
+        card.Live:SetCode(ns.Controls.CodeFor(example.controls, values) or "")
+        Card.Layout(card)
+    end
 end
 
 function Card:Create(parent, width, example, onResize)
@@ -91,6 +95,9 @@ function Card:Create(parent, width, example, onResize)
             Apply(card, key, value, all)
         end)
         card.Controls = controls
+        if ns.Controls.CodeFor(example.controls, values) then
+            card.Live = ns.CodeView:CreateLive(card, inner)
+        end
         for _, spec in ipairs(example.controls) do
             if spec.type ~= "button" then
                 Apply(card, spec.key, values[spec.key], values)
@@ -129,6 +136,12 @@ function Card.Layout(card)
         card.Controls:ClearAllPoints()
         card.Controls:SetPoint("TOPLEFT", PADDING, -y)
         y = y + card.Controls:GetHeight()
+    end
+    if card.Live then
+        y = y + GAP
+        card.Live:ClearAllPoints()
+        card.Live:SetPoint("TOPLEFT", PADDING, -y)
+        y = y + card.Live:GetHeight()
     end
     if card.Toggle then
         y = y + GAP

@@ -89,7 +89,7 @@ ns.AddExample("colorpicker", {
         return swatch
     end,
     controls = {
-        { type = "check", key = "hasOpacity", label = "Opacity slider (hasOpacity)", default = true },
+        { type = "check", key = "hasOpacity", label = "Opacity slider (hasOpacity)", default = true, code = "hasOpacity = %s, -- in the SetupColorPickerAndShow table" },
     },
     apply = function(swatch, key, value)
         if key == "hasOpacity" then

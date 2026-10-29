@@ -64,7 +64,7 @@ ns.AddExample("slider", {
         return slider
     end,
     controls = {
-        { type = "check", key = "enabled", label = "Enabled", default = true },
+        { type = "check", key = "enabled", label = "Enabled", default = true, code = "slider:SetEnabled(%s)" },
     },
     apply = function(slider, key, value)
         if key == "enabled" then

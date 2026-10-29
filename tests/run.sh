@@ -31,6 +31,16 @@ echo "-- tests --"
 run "snippets up to date" tools/gen-snippets.lua . --check
 run "registry" tests/registry.lua .
 
+# The availability data is read from ../Blizzard_UI_refs, which only the workspace has (not CI).
+PYTHON=${PYTHON:-python}
+if [ -d ../Blizzard_UI_refs ] && command -v "$PYTHON" >/dev/null 2>&1; then
+    if out=$("$PYTHON" tools/gen-availability.py --check 2>&1); then
+        printf '  %-44s OK\n' "availability up to date"
+    else
+        printf '  %-44s FAIL\n' "availability up to date"; echo "$out" | sed 's/^/      /'; fail=1
+    fi
+fi
+
 echo
 [ "$fail" -eq 0 ] && echo "ALL PASS" || echo "FAILURES"
 exit $fail

@@ -71,11 +71,11 @@ ns.AddExample("cooldown", {
         return icon
     end,
     controls = {
-        { type = "slider", key = "seconds", label = "Duration (s)", min = 2, max = 30, step = 1, default = 10 },
-        { type = "check", key = "edge", label = "Draw edge", default = true },
-        { type = "check", key = "bling", label = "Draw bling", default = true },
-        { type = "check", key = "numbers", label = "Countdown numbers", default = true },
-        { type = "check", key = "reverse", label = "Reverse", default = false },
+        { type = "slider", key = "seconds", label = "Duration (s)", min = 2, max = 30, step = 1, default = 10, code = "StartCooldown(icon, %s) -- on Start" },
+        { type = "check", key = "edge", label = "Draw edge", default = true, code = "icon.Cooldown:SetDrawEdge(%s)" },
+        { type = "check", key = "bling", label = "Draw bling", default = true, code = "icon.Cooldown:SetDrawBling(%s)" },
+        { type = "check", key = "numbers", label = "Countdown numbers", default = true, code = function(value) return ("icon.Cooldown:SetHideCountdownNumbers(%s)"):format(tostring(not value)) end },
+        { type = "check", key = "reverse", label = "Reverse", default = false, code = "icon.Cooldown:SetReverse(%s)" },
         { type = "button", key = "start", label = "Start" },
     },
     apply = function(icon, key, value, values)
@@ -120,7 +120,7 @@ ns.AddExample("cooldown", {
         return icon
     end,
     controls = {
-        { type = "slider", key = "seconds", label = "Duration (s)", min = 2, max = 30, step = 1, default = 8 },
+        { type = "slider", key = "seconds", label = "Duration (s)", min = 2, max = 30, step = 1, default = 8, code = function(value) return ('StartTimer(icon, "Cooldown", %d) -- or "LossOfControl", "Charge"'):format(value) end },
         { type = "button", key = "Cooldown", label = "Start cooldown" },
         { type = "button", key = "LossOfControl", label = "Start loss of control" },
         { type = "button", key = "Charge", label = "Start charge" },

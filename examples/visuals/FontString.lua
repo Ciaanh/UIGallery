@@ -81,11 +81,11 @@ ns.AddExample("fontstring", {
         return text
     end,
     controls = {
-        { type = "choice", key = "fontObject", label = "Font object", choices = FONT_OBJECTS, default = "GameFontNormal" },
-        { type = "choice", key = "outline", label = "Outline", choices = OUTLINES, default = "" },
-        { type = "choice", key = "justify", label = "Justify", choices = JUSTIFY, default = "CENTER" },
-        { type = "check", key = "wrap", label = "Word wrap", default = true },
-        { type = "check", key = "shadow", label = "Shadow", default = true },
+        { type = "choice", key = "fontObject", label = "Font object", choices = FONT_OBJECTS, default = "GameFontNormal", code = "text:SetFontObject(%s)" },
+        { type = "choice", key = "outline", label = "Outline", choices = OUTLINES, default = "", code = function(value) return ('local file, size = text:GetFont()\ntext:SetFont(file, size, "%s")'):format(value) end },
+        { type = "choice", key = "justify", label = "Justify", choices = JUSTIFY, default = "CENTER", code = "text:SetJustifyH(%s)" },
+        { type = "check", key = "wrap", label = "Word wrap", default = true, code = "text:SetWordWrap(%s)" },
+        { type = "check", key = "shadow", label = "Shadow", default = true, code = function(value) return value and "text:SetShadowColor(0, 0, 0, 1)\ntext:SetShadowOffset(1, -1)" or "text:SetShadowOffset(0, 0)" end },
     },
     apply = function(text, _, _, values)
         ApplyTextStyle(text, values)

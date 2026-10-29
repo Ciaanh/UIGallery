@@ -68,12 +68,12 @@ ns.AddExample("texture", {
         return texture
     end,
     controls = {
-        { type = "choice", key = "source", label = "Source", choices = SOURCES, default = "icon" },
-        { type = "slider", key = "alpha", label = "Alpha", min = 0, max = 1, step = 0.05, default = 1 },
-        { type = "slider", key = "rotation", label = "Rotation (degrees)", min = 0, max = 360, step = 5, default = 0 },
-        { type = "check", key = "desaturated", label = "Desaturated", default = false },
-        { type = "check", key = "tint", label = "Red vertex colour", default = false },
-        { type = "choice", key = "blend", label = "Blend mode", choices = BLEND_MODES, default = "BLEND" },
+        { type = "choice", key = "source", label = "Source", choices = SOURCES, default = "icon", code = "SetSource(texture, %s)" },
+        { type = "slider", key = "alpha", label = "Alpha", min = 0, max = 1, step = 0.05, default = 1, code = "texture:SetAlpha(%s)" },
+        { type = "slider", key = "rotation", label = "Rotation (degrees)", min = 0, max = 360, step = 5, default = 0, code = "texture:SetRotation(math.rad(%s))" },
+        { type = "check", key = "desaturated", label = "Desaturated", default = false, code = "texture:SetDesaturated(%s)" },
+        { type = "check", key = "tint", label = "Red vertex colour", default = false, code = function(value) return value and "texture:SetVertexColor(1, 0.3, 0.3)" or "texture:SetVertexColor(1, 1, 1)" end },
+        { type = "choice", key = "blend", label = "Blend mode", choices = BLEND_MODES, default = "BLEND", code = "texture:SetBlendMode(%s)" },
     },
     apply = function(texture, key, value)
         if key == "source" then

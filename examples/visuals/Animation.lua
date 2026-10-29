@@ -87,10 +87,10 @@ ns.AddExample("animation", {
         return icon
     end,
     controls = {
-        { type = "choice", key = "kind", label = "Animation", choices = KINDS, default = "pulse" },
-        { type = "slider", key = "duration", label = "Duration (s)", min = 0.1, max = 3, step = 0.1, default = 0.6 },
-        { type = "choice", key = "looping", label = "Looping", choices = LOOPING, default = "BOUNCE" },
-        { type = "choice", key = "smoothing", label = "Smoothing", choices = SMOOTHING, default = "IN_OUT" },
+        { type = "choice", key = "kind", label = "Animation", choices = KINDS, default = "pulse", code = function(_, v) return ('SetAnimation(icon, "%s", %g, "%s", "%s")'):format(v.kind, v.duration, v.looping, v.smoothing) end },
+        { type = "slider", key = "duration", label = "Duration (s)", min = 0.1, max = 3, step = 0.1, default = 0.6, code = false },
+        { type = "choice", key = "looping", label = "Looping", choices = LOOPING, default = "BOUNCE", code = false },
+        { type = "choice", key = "smoothing", label = "Smoothing", choices = SMOOTHING, default = "IN_OUT", code = false },
         { type = "button", key = "play", label = "Replay" },
     },
     apply = function(icon, _, _, values)
@@ -118,7 +118,7 @@ ns.AddExample("animation", {
         return loop
     end,
     controls = {
-        { type = "slider", key = "duration", label = "Cycle (s)", min = 0.2, max = 3, step = 0.1, default = 1 },
+        { type = "slider", key = "duration", label = "Cycle (s)", min = 0.2, max = 3, step = 0.1, default = 1, code = function(value) return ("loop.Flipbook.Anim.Flip:SetDuration(%g)\nloop.Flipbook.Anim:Restart()"):format(value) end },
     },
     apply = function(loop, key, value)
         if key == "duration" then

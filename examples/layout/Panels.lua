@@ -107,10 +107,10 @@ ns.AddExample("panels", {
         return holder
     end,
     controls = {
-        { type = "choice", key = "layout", label = "Layout", choices = LAYOUTS, default = "Dialog" },
-        { type = "slider", key = "width", label = "Width", min = 100, max = 700, step = 10, default = 300 },
-        { type = "slider", key = "height", label = "Height", min = 60, max = 340, step = 10, default = 140 },
-        { type = "check", key = "background", label = "Own background", default = true },
+        { type = "choice", key = "layout", label = "Layout", choices = LAYOUTS, default = "Dialog", code = "NineSliceUtil.ApplyLayoutByName(box, %s)" },
+        { type = "slider", key = "width", label = "Width", min = 100, max = 700, step = 10, default = 300, code = function(_, values) return ("box:SetSize(%d, %d) -- grown to the layout's minimum"):format(values.width, values.height) end },
+        { type = "slider", key = "height", label = "Height", min = 60, max = 340, step = 10, default = 140, code = false },
+        { type = "check", key = "background", label = "Own background", default = true, code = "box.Background:SetShown(%s)" },
     },
     apply = function(holder, _, _, values)
         ShowLayout(holder, values)
@@ -154,7 +154,7 @@ ns.AddExample("panels", {
         return flat
     end,
     controls = {
-        { type = "slider", key = "alpha", label = "Background alpha", min = 0, max = 1, step = 0.05, default = 0.9 },
+        { type = "slider", key = "alpha", label = "Background alpha", min = 0, max = 1, step = 0.05, default = 0.9, code = "box:SetBackdropColor(0.1, 0.12, 0.2, %s)" },
     },
     apply = function(flat, key, value)
         if key == "alpha" then
